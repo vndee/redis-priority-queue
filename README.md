@@ -17,7 +17,9 @@ The project includes both synchronous (thread-based) and asynchronous (asyncio-b
 ## Prerequisites
 
 - Python 3.6+
-- Redis server running on localhost:6379
+- Redis server (local installation or Docker)
+- uv package manager (faster alternative to pip)
+- Docker (optional, for running Redis in container)
 - Python packages:
   ```
   redis>=4.5.0    # Includes both sync and async implementations
@@ -31,12 +33,47 @@ The project includes both synchronous (thread-based) and asynchronous (asyncio-b
    cd redis-priority-queue
    ```
 
-2. Install dependencies:
+2. Install uv (if not already installed):
    ```bash
-   pip install -r requirements.txt
+   # Using curl (recommended)
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+
+   # Or using pip
+   pip install uv
    ```
 
-3. Ensure Redis server is running:
+3. Create and activate virtual environment:
+   ```bash
+   uv venv
+   source .venv/bin/activate  # On Unix/macOS
+   # or
+   .venv\Scripts\activate     # On Windows
+   ```
+
+4. Install dependencies:
+   ```bash
+   uv pip install -r requirements.txt
+   ```
+
+5. Set up Redis (choose one option):
+
+   ### Option 1: Using Docker (Recommended)
+   ```bash
+   # Pull Redis image
+   docker pull redis:latest
+
+   # Run Redis container
+   docker run --name redis-queue -p 6379:6379 -d redis:latest
+
+   # Check if Redis is running
+   docker ps
+
+   # Stop Redis when done
+   docker stop redis-queue
+   docker rm redis-queue
+   ```
+
+   ### Option 2: Local Installation
    ```bash
    # On macOS with Homebrew
    brew services start redis
@@ -64,6 +101,8 @@ redis-priority-queue/
 ```
 
 ## Running the Demo
+
+First, ensure Redis is running (either via Docker or local installation).
 
 You can choose to run either the synchronous or asynchronous version:
 
@@ -108,6 +147,37 @@ You'll see the following in both versions:
 - Higher priority tasks processed before lower priority ones
 
 To stop any component, press Ctrl+C in its terminal.
+
+## Redis Management
+
+### Using Docker
+```bash
+# View Redis logs
+docker logs redis-queue
+
+# Access Redis CLI
+docker exec -it redis-queue redis-cli
+
+# Monitor Redis in real-time
+docker exec -it redis-queue redis-cli monitor
+
+# View queue contents
+docker exec -it redis-queue redis-cli
+> ZRANGE task_queue 0 -1 WITHSCORES
+```
+
+### Using Local Installation
+```bash
+# Access Redis CLI
+redis-cli
+
+# Monitor Redis in real-time
+redis-cli monitor
+
+# View queue contents
+redis-cli
+> ZRANGE task_queue 0 -1 WITHSCORES
+```
 
 ## Implementation Details
 
