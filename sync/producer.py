@@ -1,7 +1,6 @@
 from redis_pq import RedisPriorityQueue, Producer
 import random
 import time
-import asyncio
 
 def generate_mixed_priority_task():
     """Generate tasks with different priorities"""
@@ -19,7 +18,7 @@ def generate_mixed_priority_task():
     }
     return data, priority
 
-async def main():
+if __name__ == "__main__":
     # Initialize queue
     queue = RedisPriorityQueue(host='localhost', port=6379, db=0)
     
@@ -37,10 +36,11 @@ async def main():
     print("- Priority 2 (Medium)")
     print("- Priority 3 (Low)")
     
-    await producer.start()
-
-if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        producer.start()
+        # Keep the main thread alive
+        while True:
+            time.sleep(1)
     except KeyboardInterrupt:
         print("\nShutting down Producer...")
+        producer.stop() 

@@ -2,6 +2,8 @@
 
 A Python implementation of a priority queue using Redis as the backend storage. This implementation demonstrates how to handle tasks with different priority levels while ensuring each task is processed exactly once, even with multiple consumers.
 
+The project includes both synchronous (thread-based) and asynchronous (asyncio-based) implementations.
+
 ## Features
 
 - Priority-based task processing (1=high, 2=medium, 3=low)
@@ -10,6 +12,7 @@ A Python implementation of a priority queue using Redis as the backend storage. 
 - Real-time task distribution
 - Timestamps for task creation and processing
 - Graceful shutdown handling
+- Both synchronous and asynchronous implementations
 
 ## Prerequisites
 
@@ -17,7 +20,7 @@ A Python implementation of a priority queue using Redis as the backend storage. 
 - Redis server running on localhost:6379
 - Python packages:
   ```
-  redis
+  redis>=4.5.0    # Includes both sync and async implementations
   ```
 
 ## Installation
@@ -30,7 +33,7 @@ A Python implementation of a priority queue using Redis as the backend storage. 
 
 2. Install dependencies:
    ```bash
-   pip install redis
+   pip install -r requirements.txt
    ```
 
 3. Ensure Redis server is running:
@@ -42,47 +45,90 @@ A Python implementation of a priority queue using Redis as the backend storage. 
    sudo service redis-server start
    ```
 
-## Components
+## Project Structure
 
-### 1. Redis Priority Queue (`redis_pq.py`)
-- Core implementation of the priority queue using Redis sorted sets
-- Provides push, pop, peek, and other queue operations
-- Includes base classes for producers and consumers
-
-### 2. Producer (`producer.py`)
-- Generates tasks with random priorities and types
-- Adds timestamps to track task flow
-- Configurable production interval
-
-### 3. Consumers (`consumer_1.py` and `consumer_2.py`)
-- Process tasks based on priority
-- Show timing information for task processing
-- Different processing times to demonstrate load distribution
+```
+redis-priority-queue/
+├── async/                  # Asyncio-based implementation
+│   ├── redis_pq.py        # Core async implementation using redis.asyncio
+│   ├── producer.py        # Async producer
+│   ├── consumer_1.py      # First async consumer
+│   └── consumer_2.py      # Second async consumer
+├── sync/                  # Thread-based implementation
+│   ├── redis_pq.py        # Core sync implementation using redis
+│   ├── producer.py        # Threaded producer
+│   ├── consumer_1.py      # First threaded consumer
+│   └── consumer_2.py      # Second threaded consumer
+├── requirements.txt       # Project dependencies
+└── README.md             # This file
+```
 
 ## Running the Demo
 
+You can choose to run either the synchronous or asynchronous version:
+
+### Synchronous Version (Thread-based)
+
 1. Start the producer in one terminal:
    ```bash
-   python producer.py
+   python sync/producer.py
    ```
 
 2. Start the first consumer in another terminal:
    ```bash
-   python consumer_1.py
+   python sync/consumer_1.py
    ```
 
 3. Start the second consumer in a third terminal:
    ```bash
-   python consumer_2.py
+   python sync/consumer_2.py
    ```
 
-You'll see the following:
+### Asynchronous Version (Asyncio-based)
+
+1. Start the producer in one terminal:
+   ```bash
+   python async/producer.py
+   ```
+
+2. Start the first consumer in another terminal:
+   ```bash
+   python async/consumer_1.py
+   ```
+
+3. Start the second consumer in a third terminal:
+   ```bash
+   python async/consumer_2.py
+   ```
+
+You'll see the following in both versions:
 - Producer generating tasks with random priorities
 - Tasks being distributed between consumers
 - Each task processed exactly once
 - Higher priority tasks processed before lower priority ones
 
 To stop any component, press Ctrl+C in its terminal.
+
+## Implementation Details
+
+### Synchronous Version
+- Uses the `redis` Python package
+- Thread-based workers
+- Blocking Redis operations
+- Simple to understand and debug
+
+### Asynchronous Version
+- Uses `redis.asyncio` from the Redis package
+- Asyncio-based workers
+- Non-blocking Redis operations
+- Better performance for I/O-bound operations
+- More scalable for large numbers of tasks
+
+Both versions use Redis sorted sets (ZSET) for:
+- `ZADD` to add tasks with priority as score
+- `ZRANGE` to get the highest priority task
+- `ZREM` to remove processed tasks
+- Atomic operations to ensure no duplicate processing
 
 ## Example Output
 
@@ -100,37 +146,6 @@ To stop any component, press Ctrl+C in its terminal.
   - Priority: high
   - Payload: High priority email task
 ```
-
-## How It Works
-
-1. **Task Generation**:
-   - Producer creates tasks with random priorities
-   - Each task has a unique ID and timestamp
-   - Tasks are pushed to Redis with priority as score
-
-2. **Task Distribution**:
-   - Redis sorted set maintains tasks ordered by priority
-   - Lower score (higher priority) tasks are processed first
-   - Multiple consumers can poll for tasks
-
-3. **Task Processing**:
-   - Consumers pop tasks from the queue
-   - Each task is removed from Redis when popped
-   - No task can be processed more than once
-   - Consumers process tasks at different speeds
-
-4. **Priority Handling**:
-   - Priority 1 (High): Most urgent tasks
-   - Priority 2 (Medium): Normal priority tasks
-   - Priority 3 (Low): Background tasks
-
-## Implementation Details
-
-The priority queue is implemented using Redis sorted sets (ZSET):
-- `ZADD` adds tasks with priority as score
-- `ZRANGE` gets the highest priority task
-- `ZREM` removes processed tasks
-- Atomic operations ensure no duplicate processing
 
 ## Contributing
 

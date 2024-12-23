@@ -1,24 +1,23 @@
 from redis_pq import RedisPriorityQueue, Consumer
 import time
-import asyncio
 
-async def process_task(item):
+def process_task(item):
     """Process tasks and show timing information"""
     task_data = item['data']
     current_time = time.strftime("%H:%M:%S")
     
-    print(f"\n[Consumer 2 at {current_time}] Got task:")
+    print(f"\n[Consumer 1 at {current_time}] Got task:")
     print(f"  - Task ID: {task_data['task_id']}")
     print(f"  - Created at: {task_data['created_at']}")
     print(f"  - Type: {task_data['task_type']}")
     print(f"  - Priority: {task_data['priority_level']}")
     print(f"  - Payload: {task_data['payload']}")
     
-    # Simulate processing with longer time
-    await asyncio.sleep(2.0)
-    print(f"[Consumer 2] Completed task {task_data['task_id']}\n")
+    # Simulate processing
+    time.sleep(1.5)
+    print(f"[Consumer 1] Completed task {task_data['task_id']}\n")
 
-async def main():
+if __name__ == "__main__":
     # Initialize queue
     queue = RedisPriorityQueue(host='localhost', port=6379, db=0)
     
@@ -30,14 +29,15 @@ async def main():
         poll_interval=0.5
     )
     
-    print("Starting Consumer 2...")
+    print("Starting Consumer 1...")
     print("This consumer will process tasks as they come in.")
     print("Notice that each task is processed exactly once between the consumers.")
     
-    await consumer.start()
-
-if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        consumer.start()
+        # Keep the main thread alive
+        while True:
+            time.sleep(1)
     except KeyboardInterrupt:
-        print("\nShutting down Consumer 2...")
+        print("\nShutting down Consumer 1...")
+        consumer.stop() 

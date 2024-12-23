@@ -1,4 +1,4 @@
-import aioredis
+from redis.asyncio import Redis
 import json
 import time
 import signal
@@ -17,12 +17,18 @@ class RedisPriorityQueue:
             port (int): Redis port number
             db (int): Redis database number
         """
-        self.redis_url = f"redis://{host}:{port}/{db}"
         self.redis_client = None
+        self.host = host
+        self.port = port
+        self.db = db
         
     async def connect(self):
         """Connect to Redis server"""
-        self.redis_client = await aioredis.from_url(self.redis_url)
+        self.redis_client = Redis(
+            host=self.host,
+            port=self.port,
+            db=self.db
+        )
         
     async def disconnect(self):
         """Disconnect from Redis server"""

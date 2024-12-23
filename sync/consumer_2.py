@@ -1,8 +1,7 @@
 from redis_pq import RedisPriorityQueue, Consumer
 import time
-import asyncio
 
-async def process_task(item):
+def process_task(item):
     """Process tasks and show timing information"""
     task_data = item['data']
     current_time = time.strftime("%H:%M:%S")
@@ -15,10 +14,10 @@ async def process_task(item):
     print(f"  - Payload: {task_data['payload']}")
     
     # Simulate processing with longer time
-    await asyncio.sleep(2.0)
+    time.sleep(2.0)
     print(f"[Consumer 2] Completed task {task_data['task_id']}\n")
 
-async def main():
+if __name__ == "__main__":
     # Initialize queue
     queue = RedisPriorityQueue(host='localhost', port=6379, db=0)
     
@@ -34,10 +33,11 @@ async def main():
     print("This consumer will process tasks as they come in.")
     print("Notice that each task is processed exactly once between the consumers.")
     
-    await consumer.start()
-
-if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        consumer.start()
+        # Keep the main thread alive
+        while True:
+            time.sleep(1)
     except KeyboardInterrupt:
         print("\nShutting down Consumer 2...")
+        consumer.stop() 
